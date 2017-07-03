@@ -4,20 +4,14 @@ var jq = document.createElement('script');
 jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
 document.getElementsByTagName('head')[0].appendChild(jq);
 
+// Step 2
+
 jQuery.noConflict();
+
+//create the link we will use
 
 var a = document.createElement('a');
 document.body.appendChild(a);
-var saveUrl =  " " + jQuery("video").attr("src");
-saveUrl = saveUrl.toString();
-var url = " ";
-var url = url + `${saveUrl}`;
-a.id = "grt";
-
-
-// Step 2
-
-
 
 var counter = 1;
 var courseTitle = jQuery("h1").first().text().trim().replace(/[^a-zA-Z0-9]/g, "_")
@@ -62,19 +56,20 @@ var titlesArray = [];
 })(console);
 
 function dlVid() {
+    var saveUrl = jQuery("video").attr("src");
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            console.log(this.response, typeof this.response);
-            var a = document.getElementById('grt');
+            console.log(this.response + " - " + typeof this.response);
+            
             var url = window.URL || window.webkitURL;
             a.href = url.createObjectURL(this.response);
 
             var currTitle = jQuery("ul.clips > li.selected").find("h3").text().trim();
             var currMod = jQuery("header.active").find("h2").text().trim();
+            
             a.setAttribute("download", currTitle + ".mp4");
-
-            console.log(a);
+            
             titlesArray.push(counter + " - " + currTitle);
             counter = counter + 1;
 
@@ -88,34 +83,36 @@ function dlVid() {
 
             var evt = document.createEvent('MouseEvents');
             evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-            a.dispatchEvent(evt)
+            a.dispatchEvent(evt);
+            
             jQuery("#next-control").click();
 
+            setTimeout(function () { jQuery("#play-control").click(); }, 5000);
 
-            setTimeout(function () { jQuery("#play-control").click(); }, 10000);
+            if (!lastVidToDl) {
+                setTimeout(dlVid, timeNeeded);
+                nextVid = jQuery("ul.clips > li.selected").next();
+                nextTitle = nextVid.find("h3").text().trim();
+                nextDuration = nextVid.find("div.duration").text().trim();
+                nextModule = nextVid.parent().parent().find("h2").text().trim();
 
-    if (!lastVidToDl) {
-        setTimeout(dlVid, timeNeeded);
-        nextVid = jQuery("ul.clips > li.selected").next();
-        nextTitle = nextVid.find("h3").text().trim();
-        nextDuration = nextVid.find("div.duration").text().trim();
-        nextModule = nextVid.parent().parent().find("h2").text().trim();
-
-        if (nextTitle == lastVideoName &&
-            nextDuration == lastVideoDuration &&
-            nextModule == lastModule) {
-            lastVidToDl = true;
+                if (nextTitle == lastVideoName &&
+                    nextDuration == lastVideoDuration &&
+                    nextModule == lastModule) {
+                    lastVidToDl = true;
+                }
+            }
+            else {
+                console.save(titlesArray, courseTitle + ".json");
+            }
         }
     }
-    else {
-        console.save(titlesArray, courseTitle + ".json");
-    }
-        }
-    }
-    xhr.open('GET', "" + url + "" );
+    xhr.open('GET', "" + saveUrl + "");
     xhr.responseType = 'blob';
     xhr.send();
 
 }
+
+//run our function
 
 dlSpeed = 750; dlVid();
